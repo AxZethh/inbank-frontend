@@ -21,9 +21,13 @@ class LoanForm extends StatefulWidget {
 class _LoanFormState extends State<LoanForm> {
   final _formKey = GlobalKey<FormState>();
   final _apiService = ApiService();
+  TextEditingController _countryController = TextEditingController();
+  TextEditingController _ageController = TextEditingController();
   String _nationalId = '';
   int _loanAmount = 2500;
   int _loanPeriod = 36;
+  String _country = 'Estonia';
+  int _age = 18;
   int _loanAmountResult = 0;
   int _loanPeriodResult = 0;
   String _errorMessage = '';
@@ -33,7 +37,7 @@ class _LoanFormState extends State<LoanForm> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       final result = await _apiService.requestLoanDecision(
-          _nationalId, _loanAmount, _loanPeriod);
+          _nationalId, _loanAmount, _loanPeriod, _country, _age);
       setState(() {
         int tempAmount = int.parse(result['loanAmount'].toString());
         int tempPeriod = int.parse(result['loanPeriod'].toString());
@@ -52,7 +56,12 @@ class _LoanFormState extends State<LoanForm> {
       _loanPeriodResult = 0;
     }
   }
-
+  @override
+  void dispose() {
+    _countryController.dispose();
+    _ageController.dispose();
+    super.dispose();
+  }
   // Builds the application form widget.
   // The widget automatically queries the endpoint for the latest data
   // when a field is changed.
@@ -86,6 +95,67 @@ class _LoanFormState extends State<LoanForm> {
                           ),
                         ],
                       );
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextFormField(
+                    controller: _countryController,
+                    decoration: InputDecoration(
+                      labelText: 'Country',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white),
+                      border: UnderlineInputBorder(),
+                      enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                       borderSide: BorderSide(color: Colors.white),
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your country';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _country = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  
+                  TextFormField(
+                    controller: _ageController,
+                    decoration: InputDecoration(
+                      labelText: 'Age',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white),
+                      border: UnderlineInputBorder(),
+                      enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                       borderSide: BorderSide(color: Colors.white),
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your age';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Age must be a number';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _age = int.tryParse(value) ?? 0;
+                      });
                     },
                   ),
                   const SizedBox(height: 60.0),
@@ -133,7 +203,7 @@ class _LoanFormState extends State<LoanForm> {
                   Slider.adaptive(
                     value: _loanPeriod.toDouble(),
                     min: 12,
-                    max: 60,
+                    max: 48,
                     divisions: 40,
                     label: '$_loanPeriod months',
                     activeColor: AppColors.secondaryColor,
@@ -152,7 +222,7 @@ class _LoanFormState extends State<LoanForm> {
                           padding: EdgeInsets.only(left: 12),
                           child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('6 months')),
+                              child: Text('12 months')),
                         ),
                       ),
                       Expanded(
@@ -160,7 +230,7 @@ class _LoanFormState extends State<LoanForm> {
                           padding: EdgeInsets.only(right: 12),
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: Text('60 months'),
+                            child: Text('48 months'),
                           ),
                         ),
                       )
